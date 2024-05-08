@@ -1,5 +1,10 @@
 import random
-
+#add functions like species management for proper NEAT algorithm
+#this is just a partial implementation for NEAT algo 
+"""
+Represents a node in the graph. Each node has a unique ID,
+a random value within the range (-0.5, 0.5), a set of connections to other nodes, and a set of nodes that have a connection to this node.
+"""
 class Node:
     def __init__(self, node_id, connections=[], back=[]) -> None:
         self.id = node_id
@@ -8,6 +13,12 @@ class Node:
         self.connections = set(connections)
         self.back_connections = set(back)
 
+
+"""
+Represents a graph data structure, where each node is identified by a unique ID and can have connections to other nodes.
+
+The `graph` class provides methods to add and remove nodes, add edges between nodes, and retrieve information about the connections of a node.
+"""
 class graph:
     def __init__(self) -> None:
         self.nodes = {}  
@@ -24,8 +35,15 @@ class graph:
             #print("not exist")
 
     def add_edge(self, node_id1, node_id2) -> None:
-        self.nodes[node_id1].connections.add(node_id2)
-        self.nodes[node_id2].back_connections.add(node_id1)
+        if node_id2 not in self.nodes[node_id1].connections and node_id1 not in self.nodes[node_id2].back_connections:
+            self.nodes[node_id1].connections.add(node_id2)
+            self.nodes[node_id2].back_connections.add(node_id1)
+        elif node_id2 not in self.nodes[node_id1].connections and node_id1 in self.nodes[node_id2].back_connections:
+                self.nodes[node_id1].connections.add(node_id2)  # can modify it to add or remove the connection randomly
+            #print("already exist")
+        else :
+            pass
+            #print("already exist")
     
     def get_connections(self, node_id) -> list:
         if node_id in self.nodes:
@@ -43,11 +61,26 @@ class graph:
 
     def remove_node(self, node_id) -> None:
             if node_id in self.nodes:
+                #add code to remove the connections from connected nodes
                 self.nodes.pop(node_id)
             else :
                 pass
                 #print("not exist")
 
+
+
+"""
+Represents a genome in the genetic algorithm. A genome is a single individual in the population, and contains a graph representation of a neural network.
+
+The genome class is responsible for:
+- Creating the initial structure of the neural network, including input, hidden, and output layers.
+- Initializing the forward connections between the layers.
+- Performing a forward pass through the neural network to compute the outputs.
+- Randomly adding new nodes to the hidden layer to introduce structural mutations.
+
+The genome class is a core component of the NEAT (Neuroevolution of Augmenting Topologies) algorithm,
+which evolves the structure and weights of neural networks through a genetic algorithm.
+"""
 
 class genome:
     def __init__(self, ip,op,constr=1) -> None:
@@ -208,26 +241,48 @@ class genome:
     def remove_unconnected_nodes(self) -> None:
         for node in self.graph.nodes:
             #chech logic ones
-            #print("node",node)
+            
             if len(self.graph.get_back_connections(node))==0 and node not in self.input_layer:
                 self.graph.remove_node(node)
 
 
+"""
+The `GeneticAlgorithm` class is responsible for managing the evolution of a population of genomes using a genetic algorithm. It provides methods for evaluating the fitness of genomes, selecting parents, performing crossover and mutation, and returning the best-fitted genome.
+
+The class has the following methods:
+
+- `__init__(self, population_size, input_size, output_size, generation_count)`: Initializes the `GeneticAlgorithm` instance with the specified population size, input size, output size, and generation count.
+- `evaluate_fitness(self, input_array)`: Evaluates the fitness of each genome in the population using the provided input array.
+- `fitness_function(self, genome, input_array)`: Calculates the fitness of a given genome using the provided input array. This method can be overridden to implement a custom fitness function.
+- `select_parents(self, population, k)`: Selects `k` parents from the population based on their fitness.
+- `species_managment(self, population)`: Manages the species of the population. This method can be implemented to handle species-based evolution.
+- `crossover(self, parent1, parent2)`: Performs crossover between two parent genomes to create a child genome.
+- `mutate(self, genome)`: Applies mutation to a given genome.
+- `best_fitted_genome(self)`: Returns the best-fitted genome in the population.
+- `evolve(self, input_array)`: Evolves the population over multiple generations and returns the best-fitted genome.
+- `check_convergence(population)`: Checks if the population has converged based on the best fitness.
+"""
 class GeneticAlgorithm:
+    #perfect
     def __init__(self, population_size, input_size, output_size,generation_count) -> None:
         self.generation_count = generation_count
         self.population = [genome(input_size, output_size,constr=0) for _ in range(population_size)]
 
+    # extension of fitness function 
+    #no need to change
     def evaluate_fitness(self,input_array) -> None:
         for genome in self.population:
             genome.fitness = self.fitness_function(genome,input_array)
 
+    #easy function just use forward pass take output and calculate fitness based on performance
     def fitness_function(self, genome,input_array=[1]) -> int:  
         outputs = genome.forward_pass(input_array)
         #remaining function depends on environment
         #write accordingly
         return random.randint(0,100)
 
+    #selects k parents from population based on fitness
+    #no need to change this function(selection criteria can be changed)
     def select_parents(self, population, k) -> list:
         parents = []
         for _ in range(k):
@@ -238,7 +293,15 @@ class GeneticAlgorithm:
 
         return parents
     
+    #it is good to implement this function for proper working of algo
+    #however not required
+    def species_managment(self, population) -> None:    #code can work without this function
+        #complete this function
+        pass
 
+    #crossover between 2 parents
+    #cross over should be between similar structures check the similarity of structures and then cross over
+    #node should be added in prob of 50% after crossover
     def crossover(self,parent1,parent2)-> genome:
         child = genome(len(parent1.input_layer), len(parent1.output_layer))
         winner = parent1 if parent1.fitness > parent2.fitness else parent2
@@ -273,6 +336,8 @@ class GeneticAlgorithm:
 
         return child
 
+    #function add some variations in childs like adding new node or adding new connection
+    #adjust frequency of mutation
     def mutate(self,genome)-> genome :
         if random.random() < 0.1:
             genome.add_node()
@@ -298,9 +363,14 @@ class GeneticAlgorithm:
 
         return genome
     
-    def best_fitted_genome(self) -> genome:
+    #returns best genome
+    #no need to change perfect
+    def best_fitted_genome(self) -> genome:  
         return max(self.population, key=lambda x: x.fitness)
 
+    #evolves the nn
+    #no need to change perfect
+    #remove the commented part when commented function works properly 
     def evolve(self,input_array)-> genome:
         while self.generation_count > 0:
             self.generation_count -= 1
@@ -315,20 +385,41 @@ class GeneticAlgorithm:
                 #child.remove_unconnected_nodes()
                 self.population.append(child)
                 
-
         return self.best_fitted_genome()
     
+    #checking the convergence of the population for algorithm to stop
+    #no need to change perfect
+    def check_convergence(self,population):
+        best_fitness = max(genome.fitness for genome in population)
+        if best_fitness >= 90:  
+            return True
+        return False
     
-ga = GeneticAlgorithm(population_size=100, input_size=1, output_size=1,generation_count=100)
-# give input as array to evolve
-# used in fitness function
-ga.evolve(input_array=[1])
-
 
 """
-geno=genome(1,1)
-geno.forward_conn()
-geno.add_node()
-#geno.remove_unconnected_nodes()
-geno.forward_pass([1])
+Evolves a population of genomes using a genetic algorithm approach. The `evolve` method runs the genetic algorithm for the specified number of generations, evaluating the fitness of each genome, selecting parents, and creating new child genomes through crossover and mutation.
+    
+Args:
+    input_array (list): The input data to be used for evaluating the fitness of the genomes.
+    
+Returns:
+        genome: The best-fitted genome after the specified number of generations.
+"""
+
+ga = GeneticAlgorithm(population_size=100, input_size=1, output_size=1,generation_count=100)
+ga.evolve(input_array=[1])
+
+"""
+Graph Class: 
+Additionally, the remove_node method does not handle the removal of connections correctly.
+
+
+Genome Class: 
+The remove_unconnected_nodes method is commented out and not implemented.
+
+
+GeneticAlgorithm Class:
+The crossover method inherits connections from both parents but does not handle the case where the number of nodes in the parents' graphs 
+does not match. 
+add code for changing values of node in either mutation or crossover
 """
