@@ -166,8 +166,9 @@ class genome:
                 if j in self.input_layer:    
                     for x in input_to_hidden[self.input_layer.index(j)]:
                         temp.append(self.graph.get_value(i)*x)
-            hidden_to_hidden.append(temp)
-        print(hidden_to_hidden)
+            temp=sum(temp)
+            hidden_to_hidden.append([temp])
+        #print(hidden_to_hidden)
 
         
         if self.hidden_layer_2!=[]:
@@ -183,7 +184,8 @@ class genome:
                             temp.append(self.graph.get_value(i)*x)
                     else:
                         pass
-                hidden_outputs.append(temp)
+                temp=sum(temp)
+                hidden_outputs.append([temp])
 
              # outputs    
             for i in self.output_layer:
@@ -198,7 +200,8 @@ class genome:
                             temp.append(self.graph.get_value(i)*x)
                     else:
                         pass
-                outputs.append(temp)
+                temp=sum(temp)
+                outputs.append([temp])
 
 
         else:           
@@ -215,7 +218,8 @@ class genome:
                             temp.append(self.graph.get_value(i)*x)
                     else:
                         pass
-                outputs.append(temp)
+                temp=sum(temp)
+                outputs.append([temp])
             print(outputs) 
                 
         return outputs
