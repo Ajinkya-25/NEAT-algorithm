@@ -6,6 +6,7 @@
 #|  of parents in crossover function                                     |
 #|  if more parents are selected all childrens become copy of each other |
 #|  after some generations                                               |
+#|  remove weights from node and give it to connections                  |
 #|_______________________________________________________________________|
 
 import random
